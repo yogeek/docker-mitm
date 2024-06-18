@@ -21,13 +21,13 @@ The three containers are connected together with a docker bridge network called 
 ## How to run the demo
 
 1. Install Docker, docker-compose, then run `docker-compose up -d`
-2. Connect to Alice's Firefox instance and visit `http://bob/`. This should show the actual website served by Bob
-3. You may also connect to alice via command line (`docker exec -it mitm_alice /bin/sh`) and see which MAC address corresponds to Bob's IP address
+2. Connect to Alice's Firefox instance `http://localhost:8500` and visit `http://bob/` in the embedded firefox. This should show the actual website served by Bob
+3. You may also connect to alice via command line (`docker exec -it mitm_alice /bin/sh`) and see which MAC address corresponds to Bob's IP address (with either `arp -a` or `ip neigh`)
 4. Open 2 instances of bash on Eve's container (or, equivalently, use tmux with two splits) and run the `dig` command to discover the IPs of Alice and Bob:
 
 ```
-$ dig alice
-$ dig bob
+$ dig alice --short
+$ dig bob --short
 ```
 
 5. With this information, now run arspoof twice, once for each bash instance.
@@ -42,9 +42,9 @@ In the second bash window:
 $ arpspoof -t <bob_ip> <alice_ip>
 ```
 
-6. Now you may verify in Alice's `sh` instance that `ip neighbor` shows that Bob's IP is now associated to Eve's MAC address, meaning that the ARP spoofing was successful. In any case, reloading the page still shows the normal website, since Eve is not blocking any packets yet.
-7. Now run the `add_iptables_rule.sh` script in the `olicyber` folder. This will add a rule to `iptables` to forward every packet with destination port 80 to the proxy
-8. You may verify that Alice's browser will give an error when reloading the page. This is because Eve is not blocking the packets in pitables and forwarding them to the proxy. Since the proxy is not active yet, the packets are simply dropped.
+6. Now you may verify in Alice's `sh` instance that `arp -a` (or `ip neigh`) shows that Bob's IP is now associated to Eve's MAC address, meaning that the ARP spoofing was successful. In any case, reloading the page still shows the normal website, since Eve is not blocking any packets yet.
+7. Now in Eve's containe, run the `add_iptables_rule.sh` script in the `olicyber` folder. This will add a rule to `iptables` to forward every packet with destination port 80 to the proxy
+8. You may verify that Alice's browser will give an error when reloading the page. This is because Eve is not blocking the packets in iptables and forwarding them to the proxy. Since the proxy is not active yet, the packets are simply dropped.
 9. Now we activate the proxy in passive mode:
 
 ```
